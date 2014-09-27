@@ -92,7 +92,8 @@ class BroadcastPacket(object):
 
 
 class DAC(object):
-	"""A connection to a DAC."""
+	"""A connection to a DAC.
+	Data extracted from https://github.com/j4cbo/j4cDAC/blob/master/firmware/net/point-stream.c#L212"""
 
 	def read(self, l):
 		"""Read exactly length bytes from the connection."""
@@ -140,6 +141,7 @@ class DAC(object):
 		print "Firmware: %s" % (self.firmware_string, )
 
 	def begin(self, lwm, rate):
+		"""Set lwm = low water mark, and PPS rate"""
 		cmd = struct.pack("<cHI", "b", lwm, rate)
 		self.conn.sendall(cmd)
 		return self.readresp("b")
@@ -167,6 +169,7 @@ class DAC(object):
 		return self.readresp("s")
 
 	def estop(self):
+		"""Emergency stop"""
 		self.conn.sendall("\xFF")
 		return self.readresp("\xFF")
 
@@ -206,7 +209,7 @@ class DAC(object):
 #			print "Took %f" % (t1 - t0, )
 
 			if not started:
-				self.begin(0, 10000)
+				self.begin(0, 10000) # INITIAL PPSs
 				started = 1
 
 
