@@ -3,27 +3,28 @@
 from BaseHTTPServer import BaseHTTPRequestHandler,HTTPServer
 from os import curdir, sep
 import urlparse
+#import liblo
+import dac
 
 PORT_NUMBER = 8080
+
+
+# Using OSC does not work
+#DAC_IP = "127.0.0.1"
+#DAC_OSC_PORT = 60000
+# def set_pps_via_osc(amountpps):
+#     print "Sending to " + str(DAC_IP)
+#     target = liblo.Address(DAC_IP, DAC_OSC_PORT)
+#     liblo.send(target, "/ilda/pps", int(amountpps))
 
 #This class will handles any incoming request from
 #the browser 
 class myHandler(BaseHTTPRequestHandler):
-    
-    # def do_POST(self):
-    #     length = int(self.headers['Content-Length'])
-    #     print("HEADERS: ", self.headers)
-    #     print (str(length))
-    #     print (self.rfile.read(length))
-    #     mimetype='text/html'
-    #     sendReply = True
-    #     contentToShow="you made an ajax request!"
-    #     self.send_response(200)
-    #     self.send_header('Content-type',mimetype)
-    #     self.end_headers()
-    #     self.wfile.write(contentToShow)
-    #     return
 
+    def __init__(self, dac_object, *args):
+        self.dac_obj = dac_object
+        BaseHTTPRequestHandler.__init__(self, *args)
+    
     #Handler for the GET requests
     def do_GET(self):
         print "Path: " + str(self.path)
@@ -64,6 +65,9 @@ class myHandler(BaseHTTPRequestHandler):
             self.end_headers()
             contentToShow="You asked to change PPS to: " + str(pps_num)
             print contentToShow
+            # Set the projector PPS!
+            self.dac_obj.update(0, pps_num) # low water mark 0 (???), PPS given
+            #set_pps_via_osc(pps_num) # OSC does not work while streaming
             self.wfile.write(contentToShow)
             return
 
@@ -80,10 +84,19 @@ class myHandler(BaseHTTPRequestHandler):
 
         return
 
+
+print "Trying to find DAC"
+DAC_IP = dac.find_first_dac()
+print "Found DAC at " + str(DAC_IP)
+dac_obj = dac.DAC(DAC_IP)
+
+def HTTP_handler_with_DAC(*args):
+    myHandler(dac_obj, *args)
+
 try:
     #Create a web server and define the handler to manage the
     #incoming request
-    server = HTTPServer(('', PORT_NUMBER), myHandler)
+    server = HTTPServer(('', PORT_NUMBER), HTTP_handler_with_DAC)
     print 'Started httpserver on port ' , PORT_NUMBER
     
     #Wait forever for incoming http requests
