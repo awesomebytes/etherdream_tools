@@ -3,27 +3,71 @@
 from BaseHTTPServer import BaseHTTPRequestHandler,HTTPServer
 from os import curdir, sep
 import urlparse
-#import liblo
+import cgi
+import time
+import subprocess
+
 import dac
+from ILDA import readFrames, readFirstFrame
 
 PORT_NUMBER = 8080
 
+USE_DAC = False
 
-# Using OSC does not work
-#DAC_IP = "127.0.0.1"
-#DAC_OSC_PORT = 60000
-# def set_pps_via_osc(amountpps):
-#     print "Sending to " + str(DAC_IP)
-#     target = liblo.Address(DAC_IP, DAC_OSC_PORT)
-#     liblo.send(target, "/ilda/pps", int(amountpps))
+import ctypes
+def terminate_thread(thread):
+    """Terminates a python thread from another thread.
+
+    :param thread: a threading.Thread instance
+    """
+    if not thread.isAlive():
+        return
+
+    exc = ctypes.py_object(SystemExit)
+    res = ctypes.pythonapi.PyThreadState_SetAsyncExc(
+        ctypes.c_long(thread.ident), exc)
+    if res == 0:
+        raise ValueError("nonexistent thread id")
+    elif res > 1:
+        # """if it returns a number greater than one, you're in trouble,
+        # and you should call it again with exc=NULL to revert the effect"""
+        ctypes.pythonapi.PyThreadState_SetAsyncExc(thread.ident, None)
+        raise SystemError("PyThreadState_SetAsyncExc failed")
 
 #This class will handles any incoming request from
 #the browser 
 class myHandler(BaseHTTPRequestHandler):
 
     def __init__(self, dac_object, *args):
-        self.dac_obj = dac_object
+        print "Initializing my handler"
+        if USE_DAC:
+            self.dac_obj = dac_object
         BaseHTTPRequestHandler.__init__(self, *args)
+
+    def do_POST(self):
+        print "Got a POST"
+        form = cgi.FieldStorage(
+            fp=self.rfile,
+            headers=self.headers,
+            environ={'REQUEST_METHOD':'POST',
+                     'CONTENT_TYPE':self.headers['Content-Type'],
+                     })
+        filename = form['file'].filename
+        data = form['file'].file.read()
+        print "Saving at: " + curdir + sep + filename
+        open(curdir + sep  + filename, "wb").write(data)
+
+        uploaded_sentence = "uploaded %s, thanks"%filename
+        self.send_response(200)
+        self.send_header("Content-type", "text/html")
+        self.send_header("Content-length", len(uploaded_sentence))
+        self.end_headers()
+        #self.wfile.write(uploaded_sentence) 
+        self.file_to_stream = curdir + sep  + filename
+
+        # Execute the script that plays one file
+        if USE_DAC:
+            subprocess.Popen(["python", curdir + sep + "reproduce_one_frame_ilda.py", curdir + sep  + filename])
     
     #Handler for the GET requests
     def do_GET(self):
@@ -66,7 +110,8 @@ class myHandler(BaseHTTPRequestHandler):
             contentToShow="You asked to change PPS to: " + str(pps_num)
             print contentToShow
             # Set the projector PPS!
-            self.dac_obj.update(0, pps_num) # low water mark 0 (???), PPS given
+            if USE_DAC:
+                self.dac_obj.update(0, pps_num) # low water mark 0 (???), PPS given
             #set_pps_via_osc(pps_num) # OSC does not work while streaming
             self.wfile.write(contentToShow)
             return
@@ -84,11 +129,14 @@ class myHandler(BaseHTTPRequestHandler):
 
         return
 
+dac_obj = None
+if USE_DAC:
+    print "Trying to find DAC"
+    DAC_IP = dac.find_first_dac()
+    print "Found DAC at " + str(DAC_IP)
+    dac_obj = dac.DAC(DAC_IP)
 
-print "Trying to find DAC"
-DAC_IP = dac.find_first_dac()
-print "Found DAC at " + str(DAC_IP)
-dac_obj = dac.DAC(DAC_IP)
+streamer_thread = None
 
 def HTTP_handler_with_DAC(*args):
     myHandler(dac_obj, *args)
