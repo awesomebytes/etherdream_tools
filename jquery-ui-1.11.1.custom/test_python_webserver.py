@@ -14,25 +14,6 @@ PORT_NUMBER = 8080
 
 USE_DAC = False
 
-import ctypes
-def terminate_thread(thread):
-    """Terminates a python thread from another thread.
-
-    :param thread: a threading.Thread instance
-    """
-    if not thread.isAlive():
-        return
-
-    exc = ctypes.py_object(SystemExit)
-    res = ctypes.pythonapi.PyThreadState_SetAsyncExc(
-        ctypes.c_long(thread.ident), exc)
-    if res == 0:
-        raise ValueError("nonexistent thread id")
-    elif res > 1:
-        # """if it returns a number greater than one, you're in trouble,
-        # and you should call it again with exc=NULL to revert the effect"""
-        ctypes.pythonapi.PyThreadState_SetAsyncExc(thread.ident, None)
-        raise SystemError("PyThreadState_SetAsyncExc failed")
 
 #This class will handles any incoming request from
 #the browser 
@@ -44,6 +25,14 @@ class myHandler(BaseHTTPRequestHandler):
             self.dac_obj = dac_object
         BaseHTTPRequestHandler.__init__(self, *args)
 
+
+    def address_string(self):
+        # http://stackoverflow.com/questions/2617615/slow-python-http-server-on-localhost
+        # workaround for slow network access (phone)
+        host, port = self.client_address[:2]
+        #return socket.getfqdn(host) # default, slow, behaviour
+        return host
+
     def do_POST(self):
         print "Got a POST"
         form = cgi.FieldStorage(
@@ -54,20 +43,30 @@ class myHandler(BaseHTTPRequestHandler):
                      })
         filename = form['file'].filename
         data = form['file'].file.read()
-        print "Saving at: " + curdir + sep + filename
-        open(curdir + sep  + filename, "wb").write(data)
+        print "Saving at: " + curdir + sep + 'uploaded/' + filename
+        open(curdir + sep + 'uploaded/' + filename, "wb").write(data)
 
-        uploaded_sentence = "uploaded %s, thanks"%filename
+        uploaded_sentence = ""  # Sentence must be empty!! (or js does not work correctly)#"uploaded %s, thanks"%filename
         self.send_response(200)
         self.send_header("Content-type", "text/html")
         self.send_header("Content-length", len(uploaded_sentence))
         self.end_headers()
         #self.wfile.write(uploaded_sentence) 
-        self.file_to_stream = curdir + sep  + filename
 
+
+        # If the file has extension dxf, convert it
+        if filename.endswith('.dxf'):
+            subprocess.Popen([curdir + sep + "LaserBoy_dxf_to_ilda_tool", curdir + sep + 'uploaded/' + filename, curdir + sep + 'uploaded/' + filename.replace('.dxf', '.ild')])
+            
+            self.file_to_stream = curdir + sep + 'uploaded/' + filename.replace('.dxf', '.ilda')
+        elif filename.endswith('.ilda') or filename.endswith('.ild'):
+            self.file_to_stream = curdir + sep + 'uploaded/' + filename
+        else:
+            print "Error, not a file to stream, doing nothing"
+            return
         # Execute the script that plays one file
         if USE_DAC:
-            subprocess.Popen(["python", curdir + sep + "reproduce_one_frame_ilda.py", curdir + sep  + filename])
+            subprocess.Popen(["python", curdir + sep + "reproduce_one_frame_ilda.py", self.file_to_stream])
     
     #Handler for the GET requests
     def do_GET(self):
@@ -77,6 +76,7 @@ class myHandler(BaseHTTPRequestHandler):
         if self.path=="/":
             mimetype='text/html'
             self.path="/index.html"
+            self.path="/index2.html"
             sendReply = True
         if self.path.endswith(".jpg"):
             mimetype='image/jpg'
@@ -94,7 +94,7 @@ class myHandler(BaseHTTPRequestHandler):
             mimetype='text/css'
             sendReply = True
 
-        if "pps" in self.path:
+        if "pps=" in self.path:
             o = urlparse.urlparse(self.path)
             params_dict = urlparse.parse_qs(o.query)
             print "Parsed parameters:"
@@ -116,18 +116,40 @@ class myHandler(BaseHTTPRequestHandler):
             self.wfile.write(contentToShow)
             return
 
-        if sendReply == True:
-            #Open the static file requested and send it
-            f = open(curdir + sep + self.path) 
-            print "  Opening: " + str(curdir + sep + self.path)
+        if  self.path.endswith("stop"):
             self.send_response(200)
+            mimetype='text/html'
             self.send_header('Content-type',mimetype)
             self.end_headers()
+            if USE_DAC:
+                self.dac_obj.stop()
+            self.wfile.write("Stopped laser projection")
+            return
+
+        if sendReply == True:
+            #Open the static file requested and send it
+            print "  Opening: " + str(curdir + sep + self.path)
+            f = open(curdir + sep + self.path) 
+            print "Sending response 200"
+            self.send_response(200)
+            print "Sending headers"
+            self.send_header('Content-type',mimetype)
+            print "Sending end headers"
+            self.end_headers()
+            print "writting file"
             self.wfile.write(f.read())
+            print "Closing"
             f.close()
+            print "  Sent file."
 
 
         return
+
+
+# Optinally delete all old dxf ilda and ild files:
+#subprocess.Popen(["rm *.dxf *.ilda *.ild"])
+
+
 
 dac_obj = None
 if USE_DAC:
