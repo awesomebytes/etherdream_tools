@@ -2,6 +2,7 @@
 import dxfgrabber
 import dxfwrite
 
+from dxfwrite import DXFEngine
 
 dxffile = dxfgrabber.readfile("Be1.dxf")
 print("DXF version: {}".format(dxffile.dxfversion))

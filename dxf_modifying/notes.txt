@@ -24,3 +24,7 @@ arct.endangle      arct.linetype      arct.shadow_mode   arct.true_color
 So... there is a center  (154.162281, 375.071832, 0.0) and initial and final angle defining it... and a radius
  
 
+https://github.com/yorikvanhavre/Draft-dxf-importer
+
+pip install ezdxf
+
