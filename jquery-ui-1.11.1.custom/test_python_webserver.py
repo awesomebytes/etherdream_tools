@@ -43,9 +43,17 @@ class myHandler(BaseHTTPRequestHandler):
                      'CONTENT_TYPE':self.headers['Content-Type'],
                      })
         filename = form['file'].filename
-        x_coord = form['x_coord']#.getlist() # FieldStorage('x_coord', None, '10')
-        y_coord = form['y_coord']
-        print "\n\n [[[[ x_coord: " + str(x_coord) + " y_coord: " + str(y_coord) + " ]]]" 
+        if form['x_coord'].value == '':
+            x_coord = 0.0
+        else:
+            x_coord = float(form['x_coord'].value) # FieldStorage('x_coord', None, '10')
+
+        if form['y_coord'].value == '':
+            y_coord = 0.0
+        else:
+            y_coord = float(form['y_coord'].value)
+
+        print "\n\n   Translation coords: x_coord: " + str(x_coord) + " y_coord: " + str(y_coord)
         data = form['file'].file.read()
         print "Saving at: " + curdir + sep + 'uploaded/' + filename
         open(curdir + sep + 'uploaded/' + filename, "wb").write(data)
@@ -57,12 +65,24 @@ class myHandler(BaseHTTPRequestHandler):
         self.end_headers()
         #self.wfile.write(uploaded_sentence) 
 
-
-        # If the file has extension dxf, convert it
+        # If the file has extension dxf, do translation and convert it
         if filename.endswith('.dxf'):
-            subprocess.Popen([curdir + sep + "LaserBoy_dxf_to_ilda_tool", curdir + sep + 'uploaded/' + filename, curdir + sep + 'uploaded/' + filename.replace('.dxf', '.ild')])
+            original_filename = curdir + sep + 'uploaded/' + filename
+            if x_coord == 0.0 or y_coord == 0.0:
+                print "Not translating anywhere"
+            else:
+                translation_filename = curdir + sep + 'uploaded/' + filename.replace('.dxf', '') + "_translation.dxf"
+                translation_process = subprocess.Popen(["python", curdir + sep + "translation_dxf.py", 
+                                  original_filename,
+                                  translation_filename,
+                                  str(x_coord), str(y_coord) ])
+                translation_process.wait()
+            ilda_filename = curdir + sep + 'uploaded/' + filename.replace('.dxf', '.ilda')
             
-            self.file_to_stream = curdir + sep + 'uploaded/' + filename.replace('.dxf', '.ilda')
+            print "Transforming from dxf to ILDA..."
+            dxf_to_ilda_process = subprocess.Popen([curdir + sep + "LaserBoy_dxf_to_ilda_tool", original_filename, ilda_filename])
+            dxf_to_ilda_process.wait()
+            self.file_to_stream = ilda_filename
         elif filename.endswith('.ilda') or filename.endswith('.ild'):
             self.file_to_stream = curdir + sep + 'uploaded/' + filename
         else:
@@ -70,7 +90,10 @@ class myHandler(BaseHTTPRequestHandler):
             return
         # Execute the script that plays one file
         if USE_DAC:
+            print "Streaming file"
             subprocess.Popen(["python", curdir + sep + "reproduce_one_frame_ilda.py", self.file_to_stream])
+        else:
+            print "On debug mode, not streaming file"
     
     #Handler for the GET requests
     def do_GET(self):
