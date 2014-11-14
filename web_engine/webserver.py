@@ -103,7 +103,6 @@ class myHandler(BaseHTTPRequestHandler):
         if self.path=="/":
             mimetype='text/html'
             self.path="/index.html"
-            self.path="/index2.html"
             sendReply = True
         if self.path.endswith(".jpg"):
             mimetype='image/jpg'

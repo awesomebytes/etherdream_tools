@@ -2,7 +2,7 @@
 <html lang="us">
 <head>
 	<meta charset="utf-8">
-	<title>jQuery UI Example Page</title>
+	<title>Laser projection web interface</title>
 	<link href="jquery-ui.css" rel="stylesheet">
 	<style>
 	body{
@@ -50,27 +50,21 @@
 </head>
 <body>
 
-<!--<h1>Welcome to jQuery UI!</h1>
-
-<div class="ui-widget">
-	<p>This page demonstrates the widgets and theme you selected in Download Builder. Please make sure you are using them with a compatible jQuery version.</p>
-</div> -->
 
 <h1>Laser web interface:</h1>
 
 
 
-
-<form id="myForm" method="POST" enctype="multipart/form-data">
-File name: <input name="file" type="file">
-<input name="submit" type="submit" value="Project file">
-<button id="stopbutton">Stop projection</button>
+<form id="data" method="POST" enctype="multipart/form-data">
+	<input name="file" type="file" />
+	<label for="coords">Translation coords (x, y):</label>
+	<input name="x_coord" type="number" placeholder="0.0" step="any"/>
+	<input name="y_coord" type="number" placeholder="0.0" step="any"/>
+	<button>Project file</button>
+	<button id="stopbutton">Stop projection</button>
 </form>
 
 
-<!-- Slider -->
-<!-- <h2 class="demoHeaders">Laser PPS:</h2> 
-<div id="ppsnum" type="text"></div> -->
 <p>
   <label for="amountpps">Laser PPS:</label>
   <input type="text" id="amountpps" readonly style="border:0; color:#f6931f; font-weight:bold;">
@@ -80,37 +74,31 @@ File name: <input name="file" type="file">
 
 
 
-
-
-
-
-
-
-
-
-
-
-<!-- Highlight / Error -->
-<!--
-<h2 class="demoHeaders">Highlight / Error</h2>
-<div class="ui-widget">
-	<div class="ui-state-highlight ui-corner-all" style="margin-top: 20px; padding: 0 .7em;">
-		<p><span class="ui-icon ui-icon-info" style="float: left; margin-right: .3em;"></span>
-		<strong>Hey!</strong> Sample ui-state-highlight style.</p>
-	</div>
-</div>
-<br>
-<div class="ui-widget">
-	<div class="ui-state-error ui-corner-all" style="padding: 0 .7em;">
-		<p><span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span>
-		<strong>Alert:</strong> Sample ui-state-error style.</p>
-	</div>
-</div>
--->
-
 <script src="external/jquery/jquery.js"></script>
 <script src="jquery-ui.js"></script>
 <script>
+
+
+$("form#data").submit(function(){
+
+    var formData = new FormData($(this)[0]);
+
+    $.ajax({
+        url: window.location.pathname,
+        type: 'POST',
+        data: formData,
+        async: false,
+        success: function (data) {
+            console.log("File uploaded correctly")
+        },
+        cache: false,
+        contentType: false,
+        processData: false
+    });
+
+    return false;
+});
+
 
 
 
@@ -119,8 +107,8 @@ $(function() {
     $( "#stopbutton" )
       .click(function() {
         event.preventDefault();
-        console.log("stop button pressed"),
-        $.get("http://localhost:8080/stop")});
+        console.log("Stop button pressed"),
+        $.get("/stop")});
   });
 
 
@@ -129,7 +117,7 @@ $(function() {
 $( "#slider" ).slider({
 	range: false,
 	values: [ 10000 ],
-	step: 1000,
+	step: 200,
 	min: 1,
 	max: 50000
 });
@@ -137,7 +125,7 @@ $( "#slider" ).slider({
 $( "#slider" ).on( "slidechange", function( event, ui ) { 
 //console.log("slidechange event! (scroll finished moving) with event %o and ui %o, ui.value is: ", event, ui, ui.value)
 //TODO: show laser pps value
-$.get("http://localhost:8080/", { "pps" : ui.value})
+$.get("/", { "pps" : ui.value})
 .done(function( data ) {
    $( "#amountpps" ).val(ui.value);
 });
@@ -148,7 +136,7 @@ $.get("http://localhost:8080/", { "pps" : ui.value})
 $( "#slider" ).on( "slide", function( event, ui ) { 
 	console.log("slide event! (scroll is moving)"),
 //TODO: pop up laser pps value
-$.get("http://localhost:8080/",  { "pps" : ui.value})
+$.get("/",  { "pps" : ui.value})
 .done(function( data ) {
     $( "#amountpps" ).val(ui.value);
 });
