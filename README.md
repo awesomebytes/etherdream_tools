@@ -4,7 +4,7 @@ etherdream_tools
 A web interface for the etherdream DAC mostly in Python interfacing with DXF and ILDA files to stream them.
 It lets you choose a dxf file to be converted to ILDA (with translation if needed) or an ILDA file and stream it with a laser. Also set the laser PPS dynamically and stop the projection.
 
-![Web interface screenshot]( "Web interface screenshot")
+![Web interface screenshot](https://raw.githubusercontent.com/awesomebytes/etherdream_tools/master/interface_ss.jpg "Web interface screenshot")
 
 
 ===
