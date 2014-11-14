@@ -16,6 +16,8 @@ def translation_dxf(fromfile, tofile, x, y):
     endtime = time.time()
     print('Operation time: %.2f seconds' % (endtime-starttime) )
 
+#TODO: see if we need to add a phantom point in the origin to make the translation actually work
+
 def translation_x_y(dwg, x, y):
     """Given a dwg object, translate x and y coordinates of everything"""
     x = float(x)
