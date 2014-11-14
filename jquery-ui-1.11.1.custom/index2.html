@@ -57,6 +57,9 @@
 
 <form id="data" method="POST" enctype="multipart/form-data">
 	<input name="file" type="file" />
+	<label for="coords">Translation coords (x, y):</label>
+	<input name="x_coord" type="number" placeholder="0.0" />
+	<input name="y_coord" type="number" placeholder="0.0"/>
 	<button>Project file</button>
 	<button id="stopbutton">Stop projection</button>
 </form>

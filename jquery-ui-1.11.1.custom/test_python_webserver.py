@@ -7,6 +7,7 @@ import cgi
 import time
 import subprocess
 
+import liblo
 import dac
 from ILDA import readFrames, readFirstFrame
 
@@ -42,6 +43,9 @@ class myHandler(BaseHTTPRequestHandler):
                      'CONTENT_TYPE':self.headers['Content-Type'],
                      })
         filename = form['file'].filename
+        x_coord = form['x_coord']#.getlist() # FieldStorage('x_coord', None, '10')
+        y_coord = form['y_coord']
+        print "\n\n [[[[ x_coord: " + str(x_coord) + " y_coord: " + str(y_coord) + " ]]]" 
         data = form['file'].file.read()
         print "Saving at: " + curdir + sep + 'uploaded/' + filename
         open(curdir + sep + 'uploaded/' + filename, "wb").write(data)
@@ -157,8 +161,12 @@ if USE_DAC:
     DAC_IP = dac.find_first_dac()
     print "Found DAC at " + str(DAC_IP)
     dac_obj = dac.DAC(DAC_IP)
-
-streamer_thread = None
+    print "Sending maximum geometry to " + str(DAC_IP)
+    target = liblo.Address(DAC_IP, 60000)
+    liblo.send(target, "/geom/tl", int(-1), int(1))
+    liblo.send(target, "/geom/tr", int(1), int(1))
+    liblo.send(target, "/geom/bl", int(-1), int(-1))
+    liblo.send(target, "/geom/br", int(1), int(-1))
 
 def HTTP_handler_with_DAC(*args):
     myHandler(dac_obj, *args)
