@@ -6,6 +6,7 @@ It lets you choose a dxf file to be converted to ILDA (with translation if neede
 
 ![Web interface screenshot](https://raw.githubusercontent.com/awesomebytes/etherdream_tools/master/interface_ss.jpg "Web interface screenshot")
 
+Just run ```web_engine/webserver.py``` and go to [localhost 8080 port](http://localhost:8080) on your browser. By default it needs no DAC connected to test the web interface. To change that go to that file and modify ```USE_DAC = False``` to ```True```.
 
 ===
 
