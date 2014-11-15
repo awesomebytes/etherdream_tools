@@ -35,6 +35,7 @@ if __name__ == "__main__":
     d = dac.DAC(dac.find_first_dac())
     print "DAC found!"
     
+    print "Going to reproduce: " + str(sys.argv[1])
     f = open(sys.argv[1], 'rb')
     first_frame = readFirstFrame(f)
     f.close()

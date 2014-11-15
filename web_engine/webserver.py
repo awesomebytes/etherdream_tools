@@ -13,7 +13,7 @@ from ILDA import readFrames, readFirstFrame
 
 PORT_NUMBER = 8080
 
-USE_DAC = False
+USE_DAC = True
 
 
 #This class will handles any incoming request from
@@ -77,10 +77,10 @@ class myHandler(BaseHTTPRequestHandler):
                                   translation_filename,
                                   str(x_coord), str(y_coord) ])
                 translation_process.wait()
-            ilda_filename = curdir + sep + 'uploaded/' + filename.replace('.dxf', '.ilda')
+            ilda_filename = curdir + sep + 'uploaded/' + filename.replace('.dxf', '.ild')
             
-            print "Transforming from dxf to ILDA..."
-            dxf_to_ilda_process = subprocess.Popen([curdir + sep + "LaserBoy_dxf_to_ilda_tool", original_filename, ilda_filename])
+            print "Transforming from dxf to ILDA... with fixed parameters 3m 3m (height, side)"
+            dxf_to_ilda_process = subprocess.Popen([curdir + sep + "LaserBoy_dxf_to_ilda_tool", original_filename, ilda_filename, "3", "3"])
             dxf_to_ilda_process.wait()
             self.file_to_stream = ilda_filename
         elif filename.endswith('.ilda') or filename.endswith('.ild'):
