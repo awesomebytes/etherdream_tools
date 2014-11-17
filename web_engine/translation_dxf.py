@@ -48,9 +48,23 @@ def translation_x_y(dwg, x, y):
             #print "Modified center (+" + str(x) + ", +" + str(y) + ")"
             #print entity.get_dxf_attrib('center')
             #print
+        elif "CIRCLE" == entity.dxftype():
+            cx, cy, cz = entity.get_dxf_attrib('center')
+            entity.set_dxf_attrib('center', (cx + x, cy + y, cz))
+            
+        elif "POINT" == entity.dxftype():
+            # This is madness for accesing!
+            lx, ly, lz = entity.get_dxf_attrib('location') # I found it in the docs, I actually couldnt find it in attribs
+            entity.set_dxf_attrib('location', (lx + x, ly + y, lz))
+            
         else:
-            print "I don't know this entity type..."
+            print "\n\n     !!!! ERROR: I don't know this entity type... " + str(entity.dxftype())
 
+
+def add_square(dwg):
+    # Get base square -1000 to 1000
+    square_dxf = readfile('Square.dxf')
+    
 
 if __name__=='__main__':
     print "Executing translation..."
