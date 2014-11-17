@@ -68,21 +68,10 @@ class myHandler(BaseHTTPRequestHandler):
         # If the file has extension dxf, do translation and convert it
         if filename.endswith('.dxf') or filename.endswith('.DXF') :
             original_filename = curdir + sep + 'uploaded/' + filename
-            if x_coord == 0.0 or y_coord == 0.0:
-                print "Not translating anywhere"
-            else:
-                if filename.endswith('.DXF'):
-                    filename_without_extension = filename.replace('.DXF', '')
-                    ilda_filename = curdir + sep + 'uploaded/' + filename.replace('.DXF', '.ild')
-                else:
-                    filename_without_extension = filename.replace('.dxf', '')
-                    ilda_filename = curdir + sep + 'uploaded/' + filename.replace('.dxf', '.ild')
-                translation_filename = curdir + sep + 'uploaded/' + filename_without_extension + "_translation.dxf"
-                translation_process = subprocess.Popen(["python", curdir + sep + "translation_dxf.py", 
-                                  original_filename,
-                                  translation_filename,
-                                  str(x_coord), str(y_coord) ])
-                translation_process.wait()
+        if filename.endswith('.DXF'):
+            ilda_filename = curdir + sep + 'uploaded/' + filename.replace('.DXF', '.ild')
+        elif filename.endswith('.dxf'):
+            ilda_filename = curdir + sep + 'uploaded/' + filename.replace('.dxf', '.ild')
             
             print "Transforming from dxf to ILDA... with fixed parameters 3m 3m (height, side)"
             dxf_to_ilda_process = subprocess.Popen([curdir + sep + "LaserBoy_dxf_to_ilda_tool", original_filename, ilda_filename, "3", "3"])
