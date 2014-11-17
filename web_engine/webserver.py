@@ -66,24 +66,29 @@ class myHandler(BaseHTTPRequestHandler):
         #self.wfile.write(uploaded_sentence) 
 
         # If the file has extension dxf, do translation and convert it
-        if filename.endswith('.dxf'):
+        if filename.endswith('.dxf') or filename.endswith('.DXF') :
             original_filename = curdir + sep + 'uploaded/' + filename
             if x_coord == 0.0 or y_coord == 0.0:
                 print "Not translating anywhere"
             else:
-                translation_filename = curdir + sep + 'uploaded/' + filename.replace('.dxf', '') + "_translation.dxf"
+                if filename.endswith('.DXF'):
+                    filename_without_extension = filename.replace('.DXF', '')
+                    ilda_filename = curdir + sep + 'uploaded/' + filename.replace('.DXF', '.ild')
+                else:
+                    filename_without_extension = filename.replace('.dxf', '')
+                    ilda_filename = curdir + sep + 'uploaded/' + filename.replace('.dxf', '.ild')
+                translation_filename = curdir + sep + 'uploaded/' + filename_without_extension + "_translation.dxf"
                 translation_process = subprocess.Popen(["python", curdir + sep + "translation_dxf.py", 
                                   original_filename,
                                   translation_filename,
                                   str(x_coord), str(y_coord) ])
                 translation_process.wait()
-            ilda_filename = curdir + sep + 'uploaded/' + filename.replace('.dxf', '.ild')
             
             print "Transforming from dxf to ILDA... with fixed parameters 3m 3m (height, side)"
             dxf_to_ilda_process = subprocess.Popen([curdir + sep + "LaserBoy_dxf_to_ilda_tool", original_filename, ilda_filename, "3", "3"])
             dxf_to_ilda_process.wait()
             self.file_to_stream = ilda_filename
-        elif filename.endswith('.ilda') or filename.endswith('.ild'):
+        elif filename.endswith('.ilda') or filename.endswith('.ild') or filename.endswith('.ILDA') or filename.endswith('.ILD'):
             self.file_to_stream = curdir + sep + 'uploaded/' + filename
         else:
             print "Error, not a file to stream, doing nothing"
