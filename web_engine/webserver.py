@@ -74,7 +74,11 @@ class myHandler(BaseHTTPRequestHandler):
             ilda_filename = curdir + sep + 'uploaded/' + filename.replace('.dxf', '.ild')
             
             print "Transforming from dxf to ILDA... with fixed parameters 3m 3m (height, side)"
-            dxf_to_ilda_process = subprocess.Popen([curdir + sep + "LaserBoy_dxf_to_ilda_tool", original_filename, ilda_filename, "3", "3"])
+            dxf_to_ilda_process = subprocess.Popen([curdir + sep + "LaserBoy_dxf_to_ilda_tool", 
+                                                    original_filename, ilda_filename, 
+                                                    "3", "3", 
+                                                    "20",
+                                                     str(x_coord), str(y_coord)])
             dxf_to_ilda_process.wait()
             self.file_to_stream = ilda_filename
         elif filename.endswith('.ilda') or filename.endswith('.ild') or filename.endswith('.ILDA') or filename.endswith('.ILD'):
