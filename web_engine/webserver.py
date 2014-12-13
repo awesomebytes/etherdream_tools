@@ -13,7 +13,7 @@ from ILDA import readFrames, readFirstFrame
 
 PORT_NUMBER = 8080
 
-USE_DAC = True
+USE_DAC = False
 
 
 #This class will handles any incoming request from
@@ -183,10 +183,10 @@ if USE_DAC:
     dac_obj = dac.DAC(DAC_IP)
     print "Sending maximum geometry to " + str(DAC_IP)
     target = liblo.Address(DAC_IP, 60000)
-    liblo.send(target, "/geom/tl", int(-1), int(1))
-    liblo.send(target, "/geom/tr", int(1), int(1))
-    liblo.send(target, "/geom/bl", int(-1), int(-1))
-    liblo.send(target, "/geom/br", int(1), int(-1))
+    liblo.send(target, "/geom/tl", float(-1), float(1))
+    liblo.send(target, "/geom/tr", float(1), float(1))
+    liblo.send(target, "/geom/bl", float(-1), float(-1))
+    liblo.send(target, "/geom/br", float(1), float(-1))
 
 def HTTP_handler_with_DAC(*args):
     myHandler(dac_obj, *args)
