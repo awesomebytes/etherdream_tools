@@ -24,18 +24,19 @@ class StartQT4(QtGui.QMainWindow):
         bl_y = float ( self.ui.bl_y.value() )
         br_x = float ( self.ui.br_x.value() )
         br_y = float ( self.ui.br_y.value() )
-        print "Sending:"
+        print "Sending to: " + str(self.ui.edit_ip.text())
         print "tl_x, tl_y, tr_x, tr_y, bl_x, bl_y, br_x, br_y"
         print tl_x, tl_y, tr_x, tr_y, bl_x, bl_y, br_x, br_y
-        print "Sending to: " + str(self.ui.edit_ip.text())
         target = liblo.Address(str(self.ui.edit_ip.text()), 60000)
         liblo.send(target, "/geom/tl", tl_x, tl_y)
         liblo.send(target, "/geom/tr", tr_x, tr_y)
         liblo.send(target, "/geom/bl", bl_x, bl_y)
         liblo.send(target, "/geom/br", br_x, br_y)
+        print "----------------------------------------------"
 
     def search_dac(self):
         import dac
+        print "Finding dac..."
         self.dac_ip = dac.find_first_dac()
         print "Found DAC at " + str(self.dac_ip)
         self.ui.edit_ip.setText(str(self.dac_ip))
